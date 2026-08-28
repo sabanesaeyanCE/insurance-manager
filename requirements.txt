@@ -1,0 +1,9 @@
+streamlit
+SQLAlchemy
+pandas
+openpyxl
+jdatetime
+streamlit-nej-datepicker
+streamlit-keyup
+num2fawords
+pytest
