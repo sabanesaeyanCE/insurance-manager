@@ -1,5 +1,4 @@
 from typing import List
-import pandas as pd
 import streamlit as st
 
 from src.services.excel_export_service import export_installments_to_excel
@@ -10,7 +9,7 @@ from src.services.installment_report_service import InstallmentDetail
 from src.services.payment_service import pay_installment_facade
 from src.ui.components.calendar import _render_jalali_datepicker
 from src.utils.helpers import format_currency
-from src.utils.jalali_date import gregorian_to_jalali
+
 
 
 def _get_search_page_texts(user_lang: str = "fa"):
@@ -38,6 +37,7 @@ def _get_search_page_texts(user_lang: str = "fa"):
                 "تاریخ سررسید",
                 "شماره قسط",
                 "مبلغ (ریال)",
+                "عملیات",
             ],
         },
         "en": {
@@ -63,22 +63,11 @@ def _get_search_page_texts(user_lang: str = "fa"):
                 "Due Date",
                 "Installment #",
                 "Amount (Rials)",
+                "Actions",
             ],
         },
     }
     return texts.get(user_lang, texts["fa"])
-
-
-# حل مشکل ۳ (دیتابیس): کش کردن خواندن از دیتابیس تا با کلیک‌های ساده در UI دوباره کوئری نخورد
-@st.cache_data(show_spinner=False)
-def _get_cached_installments(jalali_date: str) -> List[InstallmentDetail]:
-    return search_unpaid_installments_by_exact_date_facade(jalali_date)
-
-
-# حل مشکل ۱ (اکسل): کش کردن تولید فایل اکسل بر اساس لیست اقساط
-@st.cache_data(show_spinner=False)
-def _get_cached_excel_data(installments: List[InstallmentDetail], lang: str):
-    return export_installments_to_excel(installments, lang=lang)
 
 
 @st.dialog("⚠️")
@@ -116,11 +105,6 @@ def _confirm_payment_dialog(item: InstallmentDetail, lang: str = "fa"):
             try:
                 pay_installment_facade(item.installment_id)
                 st.toast(txt["toast_success"])
-
-                # هنگام پرداخت: پاک کردن کش دیتابیس و اکسل تا قسط پرداخت شده کاملاً حذف شود
-                _get_cached_installments.clear()
-                _get_cached_excel_data.clear()
-
                 st.rerun()
             except Exception as e:
                 st.error(txt["error_msg"].format(error=e))
@@ -130,49 +114,35 @@ def _confirm_payment_dialog(item: InstallmentDetail, lang: str = "fa"):
             st.rerun()
 
 
-# حل مشکل ۲ (جدول): استفاده از st.dataframe بر پایه Canvas به جای ساخت ده‌ها st.columns و تگ HTML
 def _render_search_results_table(
     installments: List[InstallmentDetail], lang: str = "fa"
 ):
     txt = _get_search_page_texts(lang)
 
-    df = pd.DataFrame(
-        [
-            {
-                "id": item.installment_id,
-                "name": f"{item.first_name} {item.last_name}",
-                "type": item.insurance_type,
-                "phone": item.phone,
-                "date": item.due_date_jalali,
-                "num": item.installment_number,
-                "amount": format_currency(item.amount),
-            }
-            for item in installments
-        ]
-    )
+    header_cols = st.columns([2, 2, 1.5, 1.5, 1.5, 1.5, 1.5])
+    for col, header_text in zip(header_cols, txt["headers"]):
+        col.markdown(f"**{header_text}**")
 
-    event = st.dataframe(
-        df,
-        column_config={
-            "id": None,
-            "name": txt["headers"][0],
-            "type": txt["headers"][1],
-            "phone": txt["headers"][2],
-            "date": txt["headers"][3],
-            "num": txt["headers"][4],
-            "amount": txt["headers"][5],
-        },
-        use_container_width=True,
-        hide_index=True,
-        on_select="rerun",
-        selection_mode="single-row",
-    )
+    st.divider()
 
-    selected_rows = event.selection.get("rows", [])
-    if selected_rows:
-        selected_idx = selected_rows[0]
-        selected_item = installments[selected_idx]
-        _confirm_payment_dialog(selected_item, lang=lang)
+    for idx, item in enumerate(installments):
+        cols = st.columns([2, 2, 1.5, 1.5, 1.5, 1.5, 1.5])
+
+        cols[0].write(f"{item.first_name} {item.last_name}")
+        cols[1].write(item.insurance_type)
+        cols[2].write(item.phone)
+        cols[3].write(item.due_date_jalali)
+        cols[4].write(str(item.installment_number))
+        cols[5].write(format_currency(item.amount))
+
+        btn_key = f"search_pay_btn_{idx}"
+        if cols[6].button(txt["btn_pay"], key=btn_key, type="primary"):
+            _confirm_payment_dialog(item, lang=lang)
+
+        st.markdown(
+            "<hr style='margin: 0.3em 0; border-top: 1px solid #eee;'>",
+            unsafe_allow_html=True,
+        )
 
 
 def _render_search_date_page(lang: str = "fa"):
@@ -186,26 +156,23 @@ def _render_search_date_page(lang: str = "fa"):
 
     col_datepicker, _ = st.columns([2, 1])
     with col_datepicker:
-        selected_gregorian_date = _render_jalali_datepicker(
+        selected_gregorian_date,selected_jalali_str = _render_jalali_datepicker(
             label=txt["select_date_label"],
             key="search_date_picker",
         )
 
     st.divider()
 
-    selected_jalali_str = gregorian_to_jalali(selected_gregorian_date)
+   
     st.subheader(txt["results_title"].format(date=selected_jalali_str))
 
-    # فراخوانی کش‌شده داده‌های دیتابیس
-    results = _get_cached_installments(selected_jalali_str)
+    results = search_unpaid_installments_by_exact_date_facade(selected_jalali_str)
 
     if not results:
         st.info(txt["no_results"])
         return
 
-    # فراخوانی کش‌شده اکسل (اگر قسط پرداخت شود، کش پاک شده و فایل بدون آن قسط تولید می‌شود)
-    excel_data = _get_cached_excel_data(results, lang)
-
+    excel_data = export_installments_to_excel(results, lang=lang)
     st.download_button(
         label=txt["export_excel_btn"],
         data=excel_data,

@@ -37,19 +37,15 @@ def _render_insurance_type_selector(
 
 def _render_date_selector(
     label: str, saved: dict
-) -> date:
-        
-        return _render_jalali_datepicker(
-            label=label,
-            key="reg_date",
-            default_jalali_val=saved.get("registration_date_jalali",""),
-        )
-
-     
-    
+) -> tuple[date, str]:
+    return _render_jalali_datepicker(
+        label=label,
+        key="registration_date_jalali",
+        default_jalali_val=saved.get("registration_date_jalali"),
+    )
 
 
-def _render_policy_section(saved: dict,user_lang: str) -> tuple[str, date]:
+def _render_policy_section(saved: dict, user_lang: str) -> tuple[str, date]:
     txt = _get_policy_texts(user_lang)
     st.markdown(
         f"<h4 style='text-align: right;'>{txt['title']}</h4>",
@@ -61,19 +57,23 @@ def _render_policy_section(saved: dict,user_lang: str) -> tuple[str, date]:
     with col_p1:
         insurance_type = _render_insurance_type_selector(
             label=txt["type_label"],
-            saved_value=saved.get("insurance_type",""),
+            saved_value=saved.get("insurance_type", ""),
             user_lang=user_lang,
         )
 
     with col_p2:
-        registration_date = _render_date_selector(
+        # 🔑 دریافت هم‌زمان تاریخ میلادی و رشته شمسی
+        registration_date, registration_date_jalali = _render_date_selector(
             label=txt["date_label"],
             saved=saved
         )
 
+    # 🔑 آپدیت مستقیم دیکشنری با هر دو مقدار
     saved.update({
         "insurance_type": insurance_type,
         "registration_date": registration_date,
+        "registration_date_jalali": registration_date_jalali,
     })
+    
 
-    return insurance_type.get_label(user_lang).strip(), registration_date
+    return insurance_type.get_label(user_lang).strip(), registration_date,registration_date_jalali

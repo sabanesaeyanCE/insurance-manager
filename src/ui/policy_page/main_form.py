@@ -1,6 +1,5 @@
 import streamlit as st
 from src.services.policy_service import (
-    CompletePolicyPreview,
     confirm_and_save_policy_facade,
     prepare_policy_preview,
 )
@@ -8,8 +7,6 @@ from src.ui.policy_page.customer_section import _render_customer_section
 from src.ui.policy_page.payment_section import _render_payment_section
 from src.ui.policy_page.policy_section import _render_policy_section
 from src.ui.policy_page.preview_section import _render_preview_section
-from src.utils.helpers import sanitize_number_input
-from src.utils.jalali_date import gregorian_to_jalali, jalali_to_gregorian
 from src.utils.validators import (
     _validate_non_empty_string,
     validate_and_normalize_installment_inputs,
@@ -74,7 +71,7 @@ def validate_fields(fields: dict) -> bool:
         _validate_non_empty_string(fields["last_name"], "نام خانوادگی")
         _validate_non_empty_string(fields["phone"], "شماره تلفن")
         _validate_non_empty_string(fields["insurance_type"], "نوع بیمه")
-        _validate_non_empty_string(fields["registration_date"], "تاریخ ثبت بیمه ‌نامه")
+        _validate_non_empty_string(fields["registration_date_jalali"], "تاریخ ثبت بیمه ‌نامه")
         _validate_non_empty_string(fields["payment_type"],"نوع پردخت")
         if fields["insurance_type"]== "installment":
             _validate_non_empty_string(fields["installment_type"],"نوع اقساط")
@@ -112,6 +109,7 @@ def collect_raw_inputs(
     insurance_type,
     total_amount,
     registration_date,
+    registration_date_jalali,
     payment_type,
     down_payment,
     installment_count,
@@ -124,7 +122,8 @@ def collect_raw_inputs(
         "phone": phone,
         "insurance_type": insurance_type,
         "total_amount": total_amount,
-        "registration_date": gregorian_to_jalali(registration_date),
+        "registration_date": registration_date,
+        "registration_date_jalali":registration_date_jalali,
         "payment_type": payment_type,
         "down_payment": down_payment,
         "installment_count": installment_count,
@@ -148,6 +147,7 @@ def _handle_form_submission(fields: dict):
         phone=fields["phone"],
         insurance_type=fields["insurance_type"],
         registration_date=fields["registration_date"],
+        registration_date_jalali=fields["registration_date_jalali"],
         total_amount=fields["total_amount"],
         payment_type=fields["payment_type"],
         down_payment=fields["down_payment"],
@@ -180,7 +180,7 @@ def _render_main_form(user_lang: str = "fa"):
     national_id, first_name, last_name, phone = _render_customer_section(saved=saved_data,user_lang="fa")
     st.divider()
 
-    insurance_type, registration_date = _render_policy_section(saved=saved_data,user_lang="fa")
+    insurance_type, registration_date , registration_date_jalali = _render_policy_section(saved=saved_data,user_lang="fa")
     st.divider()
 
     (
@@ -200,6 +200,7 @@ def _render_main_form(user_lang: str = "fa"):
         insurance_type,
         total_amount,
         registration_date,
+        registration_date_jalali,
         payment_type,
         down_payment,
         installment_count,

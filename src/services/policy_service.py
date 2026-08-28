@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.database.models import Customer, Installment, Policy
 from src.services.installment_calculator_service import calculate_installments
-from src.utils.validators import _validate_non_empty_string
+
 from src.database.connection import get_db
 from src.services.customer_service import save_customer
 from src.utils.helpers import sanitize_number_input
@@ -29,7 +29,7 @@ def create_policy(
 
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
-        raise ValueError(f"مشتری یافت نشد.")
+        raise ValueError("مشتری یافت نشد.")
     
     calculated_items=calculate_installments(total_amount,payment_type,registration_date,down_payment,installment_count,installment_type)
 
@@ -70,9 +70,7 @@ def create_policy(
 
 
 
-from dataclasses import dataclass
-from datetime import date
-from typing import Optional
+
 
 
 @dataclass
@@ -85,6 +83,7 @@ class CompletePolicyPreview:
     # اطلاعات بیمه‌نامه
     insurance_type: str
     registration_date: date
+    registration_date_jalali:str
     total_amount: int
     payment_type: str
     down_payment: int
@@ -98,7 +97,8 @@ def prepare_policy_preview(
     last_name: str,
     phone: str,
     insurance_type: str,
-    registration_date: str,
+    registration_date: date,
+    registration_date_jalali:str,
     total_amount: int,
     payment_type: str,
     down_payment: int = 0,
@@ -123,7 +123,8 @@ def prepare_policy_preview(
         last_name=last_name.strip(),
         phone=sanitize_number_input(phone,False),
         insurance_type=insurance_type.strip(),
-        registration_date=jalali_to_gregorian(registration_date),
+        registration_date=registration_date,
+        registration_date_jalali=registration_date_jalali,
         total_amount=int(sanitize_number_input(total_amount,False) or 0),
         payment_type=clean_payment_type,
         down_payment=0 if is_cash else int(sanitize_number_input(down_payment,False) or 0),

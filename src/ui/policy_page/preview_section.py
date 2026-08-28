@@ -82,7 +82,7 @@ def _render_preview_section(
     st.divider()
 
     ins_type_label =preview_data.insurance_type
-    registration_date = preview_data.registration_date
+    registration_date_jalali = preview_data.registration_date_jalali
     total_amount = preview_data.total_amount
     payment_type = preview_data.payment_type
     down_payment = preview_data.down_payment
@@ -94,7 +94,7 @@ def _render_preview_section(
     col1, col2 = st.columns(2)
     with col1:
         st.write(f"{txt['ins_type']}: {ins_type_label}")
-        st.write(f"{txt['registration_date']}: {gregorian_to_jalali(registration_date)}")
+        st.write(f"{txt['registration_date']}: {registration_date_jalali}")
      
 
     with col2:

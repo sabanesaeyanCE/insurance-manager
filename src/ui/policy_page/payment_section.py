@@ -160,7 +160,8 @@ def _render_installment_section(
     with col_i2:
         installment_count = st.number_input(
             txt["installment_count_label"],
-            value=saved.get("installment_count", 2),
+            value=saved.get("installment_count", 0),
+            key="installment_count",
             step=1,
         )
 
