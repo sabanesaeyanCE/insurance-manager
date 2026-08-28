@@ -5,6 +5,10 @@ A Python-based insurance management system designed to simplify customer, insura
 
 The application provides a centralized workflow for registering insurance policies, automatically generating installment schedules, monitoring upcoming and overdue installments, recording payments, searching customer and installment information, and exporting installment data to Excel.
 
+<p align="center">
+  <img src="assets/demo.gif" alt="Insurance Management System Demo" width="800">
+</p>
+
 ---
 
 ## 📌 About the Project
@@ -20,6 +24,7 @@ The system is built around four main sections:
 4. Search Customer
 
 Each section provides specific tools for managing insurance and installment information.
+
 
 ---
 
