@@ -195,7 +195,6 @@ pytest -v
 insurance-manager/
 │
 ├── src/
-|   ├──assets/          #Project visual assets (UI demo GIF)
 │   ├── constant/       # Application constants and configuration flags
 │   ├── database/       # SQLAlchemy models and connection setup
 │   ├── services/       # Core business logic (Policy, Customer, Payment, Reports)
@@ -205,6 +204,7 @@ insurance-manager/
 │   └── __init__.py
 │
 ├── tests/              # Automated Pytest suite (unit & integration tests)
+├── assets/             # Project visual assets (UI demo GIF)
 │
 ├── app.py              # Application entry point
 ├── config.py           # Project settings and configuration
