@@ -195,6 +195,7 @@ pytest -v
 insurance-manager/
 │
 ├── src/
+|   ├──assets/          #Project visual assets (UI demo GIF)
 │   ├── constant/       # Application constants and configuration flags
 │   ├── database/       # SQLAlchemy models and connection setup
 │   ├── services/       # Core business logic (Policy, Customer, Payment, Reports)
@@ -219,7 +220,7 @@ insurance-manager/
 
 1. **Clone the repository:**
 ```bash
-git clone <YOUR-REPOSITORY-URL>
+git clone https://github.com/sabanesaeyanCE/insurance-manager.git
 cd insurance-manager
 
 ```
